@@ -3,25 +3,52 @@ var bm = new BodyManager();
 
 var isPlaying = false;
 
-var pauseTimes =
+var ragingBullTimes =
 [0.38, 1.12, 3.12, 4.6, 8.12, 8.8, 9.3, 11.48,
 17.44, 18.4, 19.05, 19.92, 20.48, 21.18, 22.18,
 23.17, 24.70, 25.70, 29.00, 30.28, 33.53]; // raging bull ain't pretty no more
+
+var pauses = [11.15, 16.15, 16.85, 17.30, 19.50, 25.45, 
+26.45, 27.1, 27.9, 28.5, 29.10, 30.15, 31.25, 32.7, 
+33.6, 37.05, 38.25, 41.55, 
+
+65.5, 66.33, 67.66, 70.45, 73.66, 78.60, 80.16, 
+81, 82.66, 83.66, 84.33, 85.05, 
+
+144.16, 145.5, 147, 149.80, 150.80, 
+151.5, 152.20, 152.80, 153.50, 154.2,
+
+216.5]; //ahx
+
+
+// var pauseTimes =
+// [11.217, 16.2, 16.85, 17.30, 19.60, 25.45, 26.45, 27.1, 27.5, 28.5,
+// 29.25, 30.25, 31.25, 32.7, 33.6, 37.05, 38.25, 41.55]; // raging bull
+
+// var pauseTimes2 =
+// [65.5, 66.33, 67.66, 70.40, 73.66, 78.60, 80.16, 
+// 81, 82.66, 83.66, 84.33, 85.05]; // fightclub
+
+// var pauseTimes3 =
+// [144.16, 145.5, 147, 149.80, 150.80, 151.5, 152.20, 152.80, 153.50, 154.2]; // fightclub
+
+// var pauseTime4 = 216.5;
+
 
 var currIndex = 0;
 var canPunch = false
 
 
 function preload() {
-  fullVid = createVideo("/assets/raging_bull.mp4");
-  fullVid.size(1920 , 1080);
+  fullVid = createVideo("/assets/restricted.mp4");
+  // fullVid.size(1920 , 1080);
   // fullVid.showControls();
   fullVid.play();
 
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  // createCanvas(windowWidth, windowHeight);
 
   // Define and create an instance of kinectron
   kinectron = new Kinectron("172.16.217.200");
@@ -32,7 +59,7 @@ function setup() {
   // Connect with application over peer
   kinectron.makeConnection();
   kinectron.startTrackedBodies(bodyTracked);
-  background(0);
+  // background(0);
   console.log("test1");
 }
 
@@ -40,26 +67,28 @@ function draw() {
   // Get joints for live bodies
   // for(var i = 0; i < bm.getBodies.length; i++)
   // {
-    var rightHandJoint = bm.getJoints(kinectron.HANDRIGHT)[0];
-    var rightShoulderJoint = bm.getJoints(kinectron.SHOULDERRIGHT)[0];
-    var rightElbowJoint = bm.getJoints(kinectron.ELBOWRIGHT)[0];
+    // var rightHandJoint = bm.getJoints(kinectron.HANDRIGHT)[0];
+    // var rightShoulderJoint = bm.getJoints(kinectron.SHOULDERRIGHT)[0];
+    // var rightElbowJoint = bm.getJoints(kinectron.ELBOWRIGHT)[0];
   
-    if(rightShoulderJoint != null || rightElbowJoint != null || rightHandJoint != null)
-      punch(rightShoulderJoint, rightElbowJoint, rightHandJoint);
+    // if(rightShoulderJoint != null || rightElbowJoint != null || rightHandJoint != null)
+    //   punch(rightShoulderJoint, rightElbowJoint, rightHandJoint);
 
-    var leftHandJoint = bm.getJoints(kinectron.HANDLEFT)[0];
-    var leftShoulderJoint = bm.getJoints(kinectron.SHOULDERLEFT)[0];
-    var leftElbowJoint = bm.getJoints(kinectron.ELBOWLEFT)[0];
+    // var leftHandJoint = bm.getJoints(kinectron.HANDLEFT)[0];
+    // var leftShoulderJoint = bm.getJoints(kinectron.SHOULDERLEFT)[0];
+    // var leftElbowJoint = bm.getJoints(kinectron.ELBOWLEFT)[0];
 
-    if(leftShoulderJoint != null || leftElbowJoint != null ||leftHandJoint != null)
-      punch(leftShoulderJoint, leftElbowJoint, leftHandJoint);
+    // if(leftShoulderJoint != null || leftElbowJoint != null ||leftHandJoint != null)
+    //   punch(leftShoulderJoint, leftElbowJoint, leftHandJoint);
 
-    if(fullVid.time() >= pauseTimes[currIndex] )
+
+    if(fullVid.time() >= pauses[currIndex] )
     {
       canPunch = true;
-      console.log(currIndex);
+      // console.log(currIndex);
       fullVid.pause();
       currIndex++;
+      console.log(fullVid.time());
       // if(currIndex >= pauseTimes.length)
       // {
       //   currIndex = 0;
@@ -156,9 +185,13 @@ function bodyTracked(body) {
 
 
 function keyPressed() {
-  if (keyCode == 32) {
-    punch();
+  if (keyCode == 65) {
+    punchPlay();
   } 
+  else if(keyCode == 66)
+  {
+    fullVid.pause();
+  }
   return false;
 }
 
