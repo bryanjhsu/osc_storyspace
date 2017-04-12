@@ -61,13 +61,13 @@ function setup() {
 
   // CONNECT TO MICRROSTUDIO
   //kinectron = new Kinectron("kinectron.itp.tsoa.nyu.edu");
-
+  imageMode(CENTER);
   // Connect with application over peer
   kinectron.makeConnection();
   kinectron.startTrackedBodies(bodyTracked);
   kinectron.setInfraredCallback(drawFeed);
   // background(0);
-  console.log("test");
+    console.log("test");
   // console.log(pauses.length);
   // frameRate(1);
 }
@@ -77,7 +77,7 @@ function drawFeed(img) {
   if(isFinal)
   {
   loadImage(img.src, function(loadedImage) {
-    image(loadedImage, 0, 0);
+    image(loadedImage, windowWidth/2, windowHeight/2, windowWidth, windowHeight);
   });
 }
 }
@@ -136,13 +136,12 @@ function draw() {
 }
 
 
-
 function stomp(foot)
 {
   //if foot and knee raised above a certain threshold
   //foot comes down within certain speed
   var accel = foot.acceleration * 100;
-    if(accel > 12)
+    if(accel > 14)
     {
       punchPlay();
     }
@@ -255,14 +254,11 @@ function punchPlay()
   {
     isPunchTime = false;
     isKickTime = true;
-    if(currIndex >= 41)
+    if(currIndex == 41)
     {
       isKickTime = false;
-      if(currIndex == 41)
-      {
-        isFinal = true;
-        return;
-      }
+      isFinal = true;
+      return;
     }
   }
 
