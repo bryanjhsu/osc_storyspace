@@ -19,7 +19,10 @@ var pauses = [11.15, 16.15, 16.85, 17.30, 19.50, 25.45,
 151.5, 152.20, 152.80, 153.50, 154.2,
 
 216.5]; //ahx
-
+//punch ends on 30 30 is first kick
+//41 is pause
+var isPunchTime = true;
+var isKickTime = false;
 
 // var pauseTimes =
 // [11.217, 16.2, 16.85, 17.30, 19.60, 25.45, 26.45, 27.1, 27.5, 28.5,
@@ -51,7 +54,7 @@ function setup() {
   // createCanvas(windowWidth, windowHeight);
 
   // Define and create an instance of kinectron
-  kinectron = new Kinectron("172.16.217.200");
+  kinectron = new Kinectron("172.16.223.105");
 
   // CONNECT TO MICRROSTUDIO
   //kinectron = new Kinectron("kinectron.itp.tsoa.nyu.edu");
@@ -60,50 +63,69 @@ function setup() {
   kinectron.makeConnection();
   kinectron.startTrackedBodies(bodyTracked);
   // background(0);
-  console.log("test1");
+  console.log("test4");
+  console.log(pauses.length);
+  // frameRate(1);
 }
 
 function draw() {
   // Get joints for live bodies
   // for(var i = 0; i < bm.getBodies.length; i++)
   // {
-    // var rightHandJoint = bm.getJoints(kinectron.HANDRIGHT)[0];
-    // var rightShoulderJoint = bm.getJoints(kinectron.SHOULDERRIGHT)[0];
-    // var rightElbowJoint = bm.getJoints(kinectron.ELBOWRIGHT)[0];
-  
-    // if(rightShoulderJoint != null || rightElbowJoint != null || rightHandJoint != null)
-    //   punch(rightShoulderJoint, rightElbowJoint, rightHandJoint);
-
-    // var leftHandJoint = bm.getJoints(kinectron.HANDLEFT)[0];
-    // var leftShoulderJoint = bm.getJoints(kinectron.SHOULDERLEFT)[0];
-    // var leftElbowJoint = bm.getJoints(kinectron.ELBOWLEFT)[0];
-
-    // if(leftShoulderJoint != null || leftElbowJoint != null ||leftHandJoint != null)
-    //   punch(leftShoulderJoint, leftElbowJoint, leftHandJoint);
-
-
-    if(fullVid.time() >= pauses[currIndex] )
+    if(isPunchTime)
     {
-      canPunch = true;
-      // console.log(currIndex);
-      fullVid.pause();
-      currIndex++;
-      console.log(fullVid.time());
-      // if(currIndex >= pauseTimes.length)
-      // {
-      //   currIndex = 0;
-      // }
-    }
+      var rightHandJoint = bm.getJoints(kinectron.HANDRIGHT)[0];
+      var rightShoulderJoint = bm.getJoints(kinectron.SHOULDERRIGHT)[0];
+      var rightElbowJoint = bm.getJoints(kinectron.ELBOWRIGHT)[0];
+      // console.log(rightShoulderJoint);
+      if(rightShoulderJoint != null || rightElbowJoint != null || rightHandJoint != null)
+        punch(rightShoulderJoint, rightElbowJoint, rightHandJoint);
+
+      var leftHandJoint = bm.getJoints(kinectron.HANDLEFT)[0];
+      var leftShoulderJoint = bm.getJoints(kinectron.SHOULDERLEFT)[0];
+      var leftElbowJoint = bm.getJoints(kinectron.ELBOWLEFT)[0];
+
+      if(leftShoulderJoint != null || leftElbowJoint != null ||leftHandJoint != null)
+        // punch(leftShoulderJoint, leftElbowJoint, leftHandJoint);
+
+      if(fullVid.time() >= pauses[currIndex] )
+      {
+        canPunch = true;
+        fullVid.pause();
+        currIndex++;
+        console.log(currIndex);
+        // console.log(fullVid.time());
+        // if(currIndex >= pauseTimes.length)
+        // {
+        //   currIndex = 0;
+        // }
+      }
   // }
+    }
+
+    if(isKickTime)
+    {
+      var rightFootJoint = bm.getJoints(kinectron.FOOTRIGHT)[0];
+
+     if(rightFootJoint != null)
+      stomp(rightFootJoint);
+    }
+
+
   
 }
 
 
 
-function stomp(hip, knee, foot)
+function stomp(foot)
 {
   //if foot and knee raised above a certain threshold
   //foot comes down within certain speed
+  var accel = foot.acceleration * 100;
+    if(accel > 12)
+    {
+      punchPlay();
+    }
 }
 
 
@@ -119,6 +141,9 @@ var INBETWEEN_STATE = "";
 
 function punch(shoulder, elbow, hand)
 {
+
+  var handAccel = hand.acceleration * 100;
+
   var shoulderElbowDistance = 
       distanceVector(shoulder.pos, elbow.pos);
 
@@ -130,30 +155,39 @@ function punch(shoulder, elbow, hand)
   
   var combinedArmLength = shoulderElbowDistance + elbowHandDistance;
 
+    // if(handAccel > 10)
+    //   {
+    //     console.log(handAccel)
+    //     punchPlay();
+    //   }
 
-  if(abs(shoulderHandDistance - combinedArmLength) <= 5) //arm is extended
+  if(abs(shoulderHandDistance - combinedArmLength) <= 8 && lastState != EXTENDED_STATE) //arm is extended
   {
+    
     lastState = EXTENDED_STATE;
+    // console.log(EXTENDED_STATE);
     if(startTime != 0) //if coming from a withdrawn state
     {
       var timeDifference = millis()-startTime;
-
-      if(timeDifference < 500) //speed of punch
+      console.log(timeDifference);
+      if(timeDifference < 100) //speed of punch
       {
         var shoulderZPos = shoulder.pos.z * 100;
         var handZPos = hand.pos.z * 100;
 
+punchPlay();
         if(shoulderZPos - handZPos > combinedArmLength * 0.7) // is punch in front?
         {
-          punchPlay();
+          
         }
         startTime = 0; //reset startTime
       }
     }
   }
-  else if(shoulderHandDistance < 25) //if arm is back in initial position
+  else if(shoulderHandDistance < shoulderElbowDistance) //if arm is back in initial position
   {
     lastState = WITHDRAWN_STATE;
+    // console.log(WITHDRAWN_STATE);
   }
   else //between withdrawn and extended states
   {
@@ -197,6 +231,17 @@ function keyPressed() {
 
 function punchPlay()
 {
+  // if(currIndex >= 30)
+  // {
+  //   isPunchTime = false;
+  //   isKickTime = true;
+  //   if(currIndex >= 40)
+  //   {
+  //     isKickTime = false;
+  //   }
+  // }
+
   fullVid.play();
+
   canPunch = false;
 }
