@@ -3,14 +3,15 @@ var bm = new BodyManager();
 
 var isPlaying = false;
 
-var ragingBullTimes =
+var pauses =
 [0.38, 1.12, 3.12, 4.6, 8.12, 8.8, 9.3, 11.48,
 17.44, 18.4, 19.05, 19.92, 20.48, 21.18, 22.18,
 23.17, 24.70, 25.70, 29.00, 30.28, 33.53]; // raging bull ain't pretty no more
 
-var pauses = [11.15, 16.15, 16.85, 17.30, 19.50, 25.45, 
-26.45, 27.1, 27.9, 28.5, 29.10, 30.15, 31.25, 32.7, 
-33.6, 37.05, 38.25, 41.55, 
+var pauses2 = 
+[11.15, 16.15, 16.85, 17.30, 19.50, 25.45, 
+26.45, 27.1, 27.9, 28.5, 29.10, 30.15, 31.25, 
+32.7, 33.6, 37.05, 38.25, 41.55, 
 
 65.5, 66.33, 67.66, 70.45, 73.66, 78.60, 80.16, 
 81, 82.66, 83.66, 84.33, 85.05, 
@@ -19,7 +20,7 @@ var pauses = [11.15, 16.15, 16.85, 17.30, 19.50, 25.45,
 151.5, 152.20, 152.80, 153.50, 154.2,
 
 216.5]; //ahx
-//punch ends on 30 30 is first kick
+//punch ends on 30 30 is firrst kick
 //41 is pause
 var isPunchTime = true;
 var isKickTime = false;
@@ -46,7 +47,7 @@ var isFinal = false;
 
 
 function preload() {
-  fullVid = createVideo("/assets/restricted.mp4");
+  fullVid = createVideo("/assets/raging_bull.mp4");
   // fullVid.size(1920 , 1080);
   // fullVid.showControls();
   fullVid.play();
@@ -57,7 +58,7 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
 
   // Define and create an instance of kinectron
-  kinectron = new Kinectron("172.16.233.5");
+  kinectron = new Kinectron("172.16.238.157");
 
   // CONNECT TO MICRROSTUDIO
   //kinectron = new Kinectron("kinectron.itp.tsoa.nyu.edu");
@@ -78,8 +79,8 @@ function drawFeed(img) {
   {
   loadImage(img.src, function(loadedImage) {
     image(loadedImage, windowWidth/2, windowHeight/2, windowWidth, windowHeight);
-  });
-}
+    });
+  }
 }
 
 function draw() {
@@ -99,8 +100,8 @@ function draw() {
       var leftShoulderJoint = bm.getJoints(kinectron.SHOULDERLEFT)[0];
       var leftElbowJoint = bm.getJoints(kinectron.ELBOWLEFT)[0];
 
-      // if(leftShoulderJoint != null || leftElbowJoint != null ||leftHandJoint != null)
-        // punch(leftShoulderJoint, leftElbowJoint, leftHandJoint);
+      if(leftShoulderJoint != null || leftElbowJoint != null ||leftHandJoint != null)
+        punch(leftShoulderJoint, leftElbowJoint, leftHandJoint);
 
 
   // }
@@ -148,15 +149,7 @@ function stomp(foot)
 }
 
 
-var withdrawnZ;
-var extendedZ;
 
-var lastState = "";
-var startTime = 0;;
-
-var WITHDRAWN_STATE = "withdrawn";
-var EXTENDED_STATE = "extended"
-var INBETWEEN_STATE = "";
 
 function punch(shoulder, elbow, hand)
 {
@@ -180,14 +173,14 @@ function punch(shoulder, elbow, hand)
     //     punchPlay();
     //   }
 
-  if(abs(shoulderHandDistance - combinedArmLength) <= 8 && lastState != EXTENDED_STATE) //arm is extended
+  if(abs(shoulderHandDistance - combinedArmLength) <= 8 && hand.lastState != EXTENDED_STATE) //arm is extended
   {
     
-    lastState = EXTENDED_STATE;
+    hand.lastState = EXTENDED_STATE;
     // console.log(EXTENDED_STATE);
-    if(startTime != 0) //if coming from a withdrawn state
+    if(hand.startTime != 0) //if coming from a withdrawn state
     {
-      var timeDifference = millis()-startTime;
+      var timeDifference = millis()-hand.startTime;
       console.log(timeDifference);
       if(timeDifference < 100) //speed of punch
       {
@@ -199,22 +192,22 @@ function punch(shoulder, elbow, hand)
         {
           
         }
-        startTime = 0; //reset startTime
+        hand.startTime = 0; //reset hand.startTime
       }
     }
   }
-  else if(shoulderHandDistance < shoulderElbowDistance) //if arm is back in initial position
+  else if(shoulderHandDistance < shoulderElbowDistance*1.5) //if arm is back in initial position
   {
-    lastState = WITHDRAWN_STATE;
+    hand.lastState = WITHDRAWN_STATE;
     // console.log(WITHDRAWN_STATE);
   }
   else //between withdrawn and extended states
   {
-    if(lastState === WITHDRAWN_STATE)//leaving withdrawn into motion
+    if(hand.lastState === WITHDRAWN_STATE)//leaving withdrawn into motion
     {
       // console.log(hand.pos.z);
-      startTime = millis();//set time when leaving withdrawn
-      lastState = INBETWEEN_STATE;
+      hand.startTime = millis();//set time when leaving withdrawn
+      hand.lastState = INBETWEEN_STATE;
     }
   }
 }
@@ -238,6 +231,7 @@ function bodyTracked(body) {
 
 
 function keyPressed() {
+  console.log(keyCode);
   if (keyCode == 65) {
     punchPlay();
   } 
