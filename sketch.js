@@ -22,8 +22,6 @@ var pauses2 =
 216.5]; //ahx
 //punch ends on 30 30 is firrst kick
 //41 is pause
-var isPunchTime = true;
-var isKickTime = false;
 
 // var pauseTimes =
 // [11.217, 16.2, 16.85, 17.30, 19.60, 25.45, 26.45, 27.1, 27.5, 28.5,
@@ -44,19 +42,18 @@ var canPunch = false
 
 var isFinal = false;
 
+var vids = [];
+var vidClub;
+var fullVid;
 
 
 function preload() {
-  fullVid = createVideo("/assets/raging_bull.mp4");
-  fullVid.onended();
-  // fullVid.size(1920 , 1080);
-  // fullVid.showControls();
-  fullVid.play();
 
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  // createCanvas(windowWidth, windowHeight); 
+  noCanvas();
 
   // Define and create an instance of kinectron
   kinectron = new Kinectron("172.16.238.157");
@@ -64,21 +61,26 @@ function setup() {
   // CONNECT TO MICRROSTUDIO
 
   //kinectron = new Kinectron("kinectron.itp.tsoa.nyu.edu");
-  imageMode(CENTER);
+  // imageMode(CENTER);
   // Connect with application over peer
   kinectron.makeConnection();
   kinectron.startTrackedBodies(bodyTracked);
   kinectron.setInfraredCallback(drawFeed);
-  // background(0);
-    console.log("test");
-  // console.log(pauses.length);
-  // frameRate(1);
+
+  fullVid = createVideo("/assets/raging_bull.mp4");
+  // fullVid.onended();
+  fullVid.size(1920 , 1080);
+  // fullVid.showControls();
+  vidClub = createVideo("/assets/fight_club.mp4")
+  vidClub.hide();
+  vids.push(fullVid); //0
+  vids.push(vidClub); //1
+
 }
 
-function videoOnEnd()
+function onVideoLoad()
 {
-  currIndex = 0;
-  fullVid.play();
+  vids[curr].play();
 }
 
 function drawFeed(img) {
@@ -91,136 +93,49 @@ function drawFeed(img) {
   }
 }
 
+var curr = 0;
+var prev = 0;
+
 function draw() {
   // Get joints for live bodies
   // for(var i = 0; i < bm.getBodies.length; i++)
   // {
+    
     var bodies = bm.getBodies();
 
-    if(isPunchTime)
+    for(var i = 0; i < bodies.length; i++)
     {
-      for(var i = 0; i < bodies.length; i++)
-      {
-        var body = bodies[i];
-        var rightHandJoint = body.getJoint(kinectron.HANDRIGHT);
-        var rightShoulderJoint = body.getJoint(kinectron.SHOULDERRIGHT);
-        var rightElbowJoint = body.getJoint(kinectron.ELBOWRIGHT);
+      var body = bodies[i];
 
-         if(rightShoulderJoint != null || rightElbowJoint != null || rightHandJoint != null)
-          punch(rightShoulderJoint, rightElbowJoint, rightHandJoint);
-
-        var leftHandJoint = body.getJoint(kinectron.HANDLEFT);
-        var leftShoulderJoint = body.getJoint(kinectron.SHOULDERLEFT);
-        var leftElbowJoint = body.getJoint(kinectron.ELBOWLEFT);
-
-         if(leftShoulderJoint != null || leftElbowJoint != null ||leftHandJoint != null)
-          punch(leftShoulderJoint, leftElbowJoint, leftHandJoint);
-
-      }
-    }
-
-    if(isKickTime)
-    {
-
-      for(var body in bodies)
-      {
-        var rightFootJoint = body.getJoint(kinectron.FOOTRIGHT);
-      }
-
-     if(rightFootJoint != null)
-      stomp(rightFootJoint);
-    }
-
-    if(fullVid.time() >= pauses[currIndex] )
-      {
-        canPunch = true;
-        fullVid.pause();
-        currIndex++;
-        console.log(currIndex);
-      }
-
-    if(isFinal)
-    {
-      fullVid.hide();
-      kinectron.startInfrared();
-    }
-  
-}
-
-
-function stomp(foot)
-{
-  //if foot and knee raised above a certain threshold
-  //foot comes down within certain speed
-  var accel = foot.acceleration * 100;
-    if(accel > 14)
-    {
-      punchPlay();
+      // if(body.punch())
+      // {
+      //   switchVideo(i);
+      // }
     }
 }
 
-function punch(shoulder, elbow, hand)
+function switchVideo(i)
 {
+  curr = i;
 
-  var handAccel = hand.acceleration * 100;
-
-  var shoulderElbowDistance = 
-      distanceVector(shoulder.pos, elbow.pos);
-
-  var elbowHandDistance = 
-      distanceVector(elbow.pos, hand.pos);
-
-  var shoulderHandDistance = 
-      distanceVector(shoulder.pos, hand.pos);
-  
-  var combinedArmLength = shoulderElbowDistance + elbowHandDistance;
-
-  if(abs(shoulderHandDistance - combinedArmLength) <= 8 && hand.lastState != EXTENDED_STATE) //arm is extended
+  console.log("curr: " + curr );
+  console.log("prev: " + prev );
+  if(prev != i)
   {
-    
-    hand.lastState = EXTENDED_STATE;
-    // console.log(EXTENDED_STATE);
-    if(hand.startTime != 0) //if coming from a withdrawn state
-    {
-      var timeDifference = millis()-hand.startTime;
-      console.log(timeDifference);
-      if(timeDifference < 100) //speed of punch
-      {
-        var shoulderZPos = shoulder.pos.z * 100;
-        var handZPos = hand.pos.z * 100;
+    vids[prev].stop();
+    vids[prev].hide();
+    vids[curr].show();
+        vids[curr].time(getRandomValueFromArray(pauses));
 
-      punchPlay();
-        if(shoulderZPos - handZPos > combinedArmLength * 0.7) // is punch in front?
-        {
-          
-        }
-        hand.startTime = 0; //reset hand.startTime
-      }
-    }
+    vids[curr].play();
   }
-  else if(shoulderHandDistance < shoulderElbowDistance*1.5) //if arm is back in initial position
-  {
-    hand.lastState = WITHDRAWN_STATE;
-    // console.log(WITHDRAWN_STATE);
-  }
-  else //between withdrawn and extended states
-  {
-    if(hand.lastState === WITHDRAWN_STATE)//leaving withdrawn into motion
-    {
-      // console.log(hand.pos.z);
-      hand.startTime = millis();//set time when leaving withdrawn
-      hand.lastState = INBETWEEN_STATE;
-    }
-  }
+  prev = i;
 }
-    
-function distanceVector( v1, v2 )
-{
-    var dx = v1.x - v2.x;
-    var dy = v1.y - v2.y;
-    var dz = v1.z - v2.z;
 
-    return 100 * Math.sqrt( dx * dx + dy * dy + dz * dz );
+function getRandomValueFromArray(array)
+{
+  var rand = array[Math.floor(Math.random() * array.length)];
+  return rand;
 }
 
 function bodyTracked(body) {
@@ -234,30 +149,14 @@ function bodyTracked(body) {
 
 function keyPressed() {
   console.log(keyCode);
-  if (keyCode == 65) {
-    punchPlay();
+  if (keyCode == 49) {
+    switchVideo(0);
   } 
-  else if(keyCode == 66)
+  else if(keyCode == 50)
   {
-    fullVid.pause();
+    switchVideo(1);
   }
   return false;
 }
 
-function punchPlay()
-{
-  if(currIndex >= 30)
-  {
-    isPunchTime = false;
-    isKickTime = true;
-    if(currIndex == 41)
-    {
-      isKickTime = false;
-      isFinal = true;
-      return;
-    }
-  }
 
-  fullVid.play();
-  canPunch = false;
-}
