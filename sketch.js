@@ -48,6 +48,7 @@ var isFinal = false;
 
 function preload() {
   fullVid = createVideo("/assets/raging_bull.mp4");
+  fullVid.onended();
   // fullVid.size(1920 , 1080);
   // fullVid.showControls();
   fullVid.play();
@@ -61,6 +62,7 @@ function setup() {
   kinectron = new Kinectron("172.16.238.157");
 
   // CONNECT TO MICRROSTUDIO
+
   //kinectron = new Kinectron("kinectron.itp.tsoa.nyu.edu");
   imageMode(CENTER);
   // Connect with application over peer
@@ -71,6 +73,12 @@ function setup() {
     console.log("test");
   // console.log(pauses.length);
   // frameRate(1);
+}
+
+function videoOnEnd()
+{
+  currIndex = 0;
+  fullVid.play();
 }
 
 function drawFeed(img) {
@@ -87,29 +95,37 @@ function draw() {
   // Get joints for live bodies
   // for(var i = 0; i < bm.getBodies.length; i++)
   // {
+    var bodies = bm.getBodies();
+
     if(isPunchTime)
     {
-      var rightHandJoint = bm.getJoints(kinectron.HANDRIGHT)[0];
-      var rightShoulderJoint = bm.getJoints(kinectron.SHOULDERRIGHT)[0];
-      var rightElbowJoint = bm.getJoints(kinectron.ELBOWRIGHT)[0];
-      // console.log(rightShoulderJoint);
-      if(rightShoulderJoint != null || rightElbowJoint != null || rightHandJoint != null)
-        punch(rightShoulderJoint, rightElbowJoint, rightHandJoint);
+      for(var i = 0; i < bodies.length; i++)
+      {
+        var body = bodies[i];
+        var rightHandJoint = body.getJoint(kinectron.HANDRIGHT);
+        var rightShoulderJoint = body.getJoint(kinectron.SHOULDERRIGHT);
+        var rightElbowJoint = body.getJoint(kinectron.ELBOWRIGHT);
 
-      var leftHandJoint = bm.getJoints(kinectron.HANDLEFT)[0];
-      var leftShoulderJoint = bm.getJoints(kinectron.SHOULDERLEFT)[0];
-      var leftElbowJoint = bm.getJoints(kinectron.ELBOWLEFT)[0];
+         if(rightShoulderJoint != null || rightElbowJoint != null || rightHandJoint != null)
+          punch(rightShoulderJoint, rightElbowJoint, rightHandJoint);
 
-      if(leftShoulderJoint != null || leftElbowJoint != null ||leftHandJoint != null)
-        punch(leftShoulderJoint, leftElbowJoint, leftHandJoint);
+        var leftHandJoint = body.getJoint(kinectron.HANDLEFT);
+        var leftShoulderJoint = body.getJoint(kinectron.SHOULDERLEFT);
+        var leftElbowJoint = body.getJoint(kinectron.ELBOWLEFT);
 
+         if(leftShoulderJoint != null || leftElbowJoint != null ||leftHandJoint != null)
+          punch(leftShoulderJoint, leftElbowJoint, leftHandJoint);
 
-  // }
+      }
     }
 
     if(isKickTime)
     {
-      var rightFootJoint = bm.getJoints(kinectron.FOOTRIGHT)[0];
+
+      for(var body in bodies)
+      {
+        var rightFootJoint = body.getJoint(kinectron.FOOTRIGHT);
+      }
 
      if(rightFootJoint != null)
       stomp(rightFootJoint);
@@ -121,11 +137,6 @@ function draw() {
         fullVid.pause();
         currIndex++;
         console.log(currIndex);
-        // console.log(fullVid.time());
-        // if(currIndex >= pauseTimes.length)
-        // {
-        //   currIndex = 0;
-        // }
       }
 
     if(isFinal)
@@ -148,9 +159,6 @@ function stomp(foot)
     }
 }
 
-
-
-
 function punch(shoulder, elbow, hand)
 {
 
@@ -166,12 +174,6 @@ function punch(shoulder, elbow, hand)
       distanceVector(shoulder.pos, hand.pos);
   
   var combinedArmLength = shoulderElbowDistance + elbowHandDistance;
-
-    // if(handAccel > 10)
-    //   {
-    //     console.log(handAccel)
-    //     punchPlay();
-    //   }
 
   if(abs(shoulderHandDistance - combinedArmLength) <= 8 && hand.lastState != EXTENDED_STATE) //arm is extended
   {

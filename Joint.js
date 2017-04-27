@@ -1,4 +1,9 @@
 // Joint object
+
+var WITHDRAWN_STATE = "withdrawn";
+var EXTENDED_STATE = "extended";
+var INBETWEEN_STATE = "";
+
 var Joint = function (id, joint) {
   // Create joint with id and position data
   this.id = id;
@@ -7,6 +12,9 @@ var Joint = function (id, joint) {
   this.speed = 0;
   this.pspeed = 0;
   this.acceleration = 0;
+
+  this.startTime = 0;
+  this.lastState = "";
 
   // Update joint position, speed and acceleration data
   this.update = function (joint) {
